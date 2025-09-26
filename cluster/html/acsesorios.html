@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fixbionic | Precios de Reparaciones</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #ffffff;
+            --secondary-color: #FF7F00;
+            --secondary-light: #FFA34D;
+            --secondary-dark: #CC6600;
+            --text-color: #333333;
+            --text-light: #666666;
+            --glass-bg: rgba(255, 255, 255, 0.274);
+            --glass-border: rgba(216, 216, 216, 0.8);
+            --glass-shadow: rgba(255, 255, 255, 0.603);
+        }
+
+        body {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 2rem;
+            background-image: radial-gradient(circle at 15% 50%, rgba(255, 165, 0, 0.05) 0%, transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(255, 165, 0, 0.05) 0%, transparent 25%);
+        }
+
+        /* Efecto de vidrio líquido (glassmorphism) */
+        .glass-effect {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--glass-shadow);
+            border-radius: 12px;
+        }
+
+        /* Sidebar con efecto de vidrio */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 250px;
+            padding: 1.5rem;
+            background: rgba(124, 124, 124, 0.253);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 4px 0 16px rgba(255, 255, 255, 0.05);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .sidebar h4 {
+            color: var(--secondary-color);
+            font-weight: 700;
+            text-align: center;
+            padding: 1rem 0;
+            border-bottom: 2px solid var(--secondary-light);
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-link {
+            color: var(--text-color);
+            padding: 0.75rem 1rem;
+            margin: 0.25rem 0;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: var(--secondary-light);
+            color: white;
+        }
+
+        .accordion-button {
+            background-color: var(--secondary-color) !important;
+            color: white !important;
+            border-radius: 8px !important;
+            font-weight: 600;
+        }
+
+        .accordion-button:not(.collapsed) {
+            box-shadow: 0 0 0 0.2rem rgba(255, 127, 0, 0.25);
+        }
+
+        /* Contenido principal */
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+                padding: 1rem 0.5rem;
+            }
+
+            .sidebar h4 {
+                font-size: 1rem;
+                writing-mode: vertical-rl;
+                text-orientation: mixed;
+                margin: 0 auto;
+            }
+
+            .nav-link span {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 80px;
+            }
+
+            body {
+                padding: 1rem;
+            }
+        }
+
+        /* Títulos */
+        h4 {
+            color: var(--secondary-color);
+            font-weight: 700;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        h4:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--secondary-color);
+            border-radius: 2px;
+        }
+
+        /* Tarjetas */
+        .card {
+            border: none;
+            border-radius: 12px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px var(--glass-shadow);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        /* Botones */
+        .btn {
+            border-radius: 8px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-dark);
+            border-color: var(--secondary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-success {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-success:hover {
+            background-color: var(--secondary-dark);
+            border-color: var(--secondary-dark);
+        }
+
+        .btn-outline-success {
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-outline-success:hover {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        /* Tablas */
+        .table {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table thead th {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-weight: 600;
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(255, 163, 77, 0.1);
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(255, 163, 77, 0.2);
+        }
+
+        /* Modal */
+        .modal-content {
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .modal-header {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        /* Formularios */
+        .form-control,
+        .form-select {
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ddd;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(255, 127, 0, 0.25);
+        }
+
+        /* Animaciones suaves */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mejoras visuales para elementos específicos */
+        #graficoAccesorios {
+            border-radius: 12px;
+            background: white;
+            padding: 1rem;
+        }
+
+        /* Estilo para saldo negativo */
+        .saldo-negativo {
+            color: #dc3545 !important;
+        }
+
+        /* Estilos para estados de deudas */
+        .deuda-pendiente {
+            background-color: rgba(255, 193, 7, 0.2) !important;
+        }
+
+        .deuda-pagada {
+            background-color: rgba(40, 167, 69, 0.2) !important;
+        }
+
+        .prestamo-pendiente {
+            background-color: rgba(23, 162, 184, 0.2) !important;
+        }
+
+        /* Estilos para la tabla de precios */
+        .tabla-precios {
+            margin-top: 2rem;
+        }
+        
+        .categoria-header {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .categoria-header:hover {
+            background-color: var(--secondary-dark);
+        }
+        
+        .categoria-header h5 {
+            margin: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .categoria-contenido {
+            display: none;
+            margin-bottom: 2rem;
+        }
+        
+        .categoria-contenido.mostrar {
+            display: block;
+        }
+        
+        .precio-destacado {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .servicio-descripcion {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        
+        .badge-modelo {
+            background-color: var(--secondary-light);
+            color: var(--text-color);
+        }
+    </style>
+</head>
+
+<body class="fade-in">
+    <!-- Sidebar con Menú Desplegable -->
+    <aside class="sidebar">
+        <h4>Fixbionic</h4>
+        <div class="accordion" id="menuAccordion">
+            <div class="accordion-item bg-transparent border-0">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#modulosMenu">
+                        Menú
+                    </button>
+                </h2>
+                <div id="modulosMenu" class="accordion-collapse collapse show">
+                    <div class="accordion-body p-0">
+                        <a class="nav-link" href="../../index.html">
+                            <i class="bi bi-house-door me-2"></i><span>Inicio</span>
+                        </a>
+                        <a class="nav-link" href="acsesorios.html">
+                            <i class="bi bi-plugin me-2"></i><span>Accesorios</span>
+                        </a>
+                        <a class="nav-link" href="estadisticas.html">
+                            <i class="bi bi-bar-chart me-2"></i><span>Estadísticas</span>
+                        </a>
+                        <a class="nav-link" href="reparacion.html">
+                            <i class="bi bi-tools me-2"></i><span>Reparaciones</span>
+                        </a>
+                        <a class="nav-link active" href="#" id="cajaMenorLink">
+                            <i class="bi bi-cash-coin me-2"></i><span>Caja Menor</span>
+                        </a>
+                        <a class="nav-link" href="#" id="preciosLink">
+                            <i class="bi bi-tags me-2"></i><span>Precios</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        <!-- SECCIÓN: Tabla de Precios -->
+        <section id="preciosSection" class="mb-4">
+            <div class="glass-effect p-4">
+                <h4 class="mb-3">Precios de Reparaciones</h4>
+                <p class="text-muted mb-4">Consulta nuestros precios por categoría de servicio. Los precios pueden variar según el modelo y la complejidad de la reparación.</p>
+                
+                <!-- Categoría: Software -->
+                <div class="categoria-header" onclick="toggleCategoria('software')">
+                    <h5>
+                        <span><i class="bi bi-code-slash me-2"></i>Reparaciones de Software</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </h5>
+                </div>
+                <div id="software" class="categoria-contenido">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Servicio</th>
+                                    <th>Descripción</th>
+                                    <th>Precio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Restauración de Sistema</td>
+                                    <td class="servicio-descripcion">Reinstalación del sistema operativo y configuración básica</td>
+                                    <td class="precio-destacado">$25.000 - $45.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Liberación de Cuenta</td>
+                                    <td class="servicio-descripcion">Recuperación de acceso a cuenta bloqueada</td>
+                                    <td class="precio-destacado">$35.000 - $60.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Actualización de Software</td>
+                                    <td class="servicio-descripcion">Actualización a la última versión disponible</td>
+                                    <td class="precio-destacado">$15.000 - $30.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Eliminación de Virus/Malware</td>
+                                    <td class="servicio-descripcion">Limpieza completa de software malicioso</td>
+                                    <td class="precio-destacado">$20.000 - $40.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Recuperación de Datos</td>
+                                    <td class="servicio-descripcion">Recuperación de archivos eliminados o dañados</td>
+                                    <td class="precio-destacado">$50.000 - $120.000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Categoría: Hardware -->
+                <div class="categoria-header" onclick="toggleCategoria('hardware')">
+                    <h5>
+                        <span><i class="bi bi-cpu me-2"></i>Reparaciones de Hardware</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </h5>
+                </div>
+                <div id="hardware" class="categoria-contenido">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Servicio</th>
+                                    <th>Descripción</th>
+                                    <th>Precio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Cambio de Pantalla</td>
+                                    <td class="servicio-descripcion">Sustitución de pantalla rota o dañada</td>
+                                    <td class="precio-destacado">$80.000 - $350.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Cambio de Batería</td>
+                                    <td class="servicio-descripcion">Reemplazo de batería agotada o defectuosa</td>
+                                    <td class="precio-destacado">$60.000 - $150.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Reparación de Conector de Carga</td>
+                                    <td class="servicio-descripcion">Reparación o cambio de puerto de carga</td>
+                                    <td class="precio-destacado">$40.000 - $100.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Cambio de Cámara</td>
+                                    <td class="servicio-descripcion">Sustitución de módulo de cámara dañado</td>
+                                    <td class="precio-destacado">$50.000 - $180.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Reparación de Altavoz/Micrófono</td>
+                                    <td class="servicio-descripcion">Reparación de componentes de audio</td>
+                                    <td class="precio-destacado">$35.000 - $90.000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Categoría: Microsoldadura -->
+                <div class="categoria-header" onclick="toggleCategoria('microsoldadura')">
+                    <h5>
+                        <span><i class="bi bi-tools me-2"></i>Microsoldadura</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </h5>
+                </div>
+                <div id="microsoldadura" class="categoria-contenido">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Servicio</th>
+                                    <th>Descripción</th>
+                                    <th>Precio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Reparación de Circuitos</td>
+                                    <td class="servicio-descripcion">Reparación de pistas y componentes en placa base</td>
+                                    <td class="precio-destacado">$80.000 - $200.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Cambio de IC/Componentes</td>
+                                    <td class="servicio-descripcion">Sustitución de circuitos integrados específicos</td>
+                                    <td class="precio-destacado">$100.000 - $250.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Reparación de Conectores</td>
+                                    <td class="servicio-descripcion">Microsoldadura de conectores internos</td>
+                                    <td class="precio-destacado">$60.000 - $150.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Reparación por Humedad</td>
+                                    <td class="servicio-descripcion">Limpieza y reparación de daños por líquidos</td>
+                                    <td class="precio-destacado">$120.000 - $300.000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Categoría: iPhone -->
+                <div class="categoria-header" onclick="toggleCategoria('iphone')">
+                    <h5>
+                        <span><i class="bi bi-phone me-2"></i>Reparaciones iPhone</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </h5>
+                </div>
+                <div id="iphone" class="categoria-contenido">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Servicio</th>
+                                    <th>Modelos</th>
+                                    <th>Precio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Cambio de Pantalla</td>
+                                    <td>
+                                        <span class="badge badge-modelo">iPhone 7/8</span>
+                                        <span class="badge badge-modelo">iPhone X/11</span>
+                                        <span class="badge badge-modelo">iPhone 12/13</span>
+                                    </td>
+                                    <td class="precio-destacado">$120.000 - $450.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Cambio de Batería</td>
+                                    <td>
+                                        <span class="badge badge-modelo">Todos los modelos</span>
+                                    </td>
+                                    <td class="precio-destacado">$80.000 - $180.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Reparación de Cámara</td>
+                                    <td>
+                                        <span class="badge badge-modelo">iPhone 7-11</span>
+                                        <span class="badge badge-modelo">iPhone 12-14</span>
+                                    </td>
+                                    <td class="precio-destacado">$90.000 - $220.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Cambio de Conector de Carga</td>
+                                    <td>
+                                        <span class="badge badge-modelo">iPhone 6-8</span>
+                                        <span class="badge badge-modelo">iPhone X-14</span>
+                                    </td>
+                                    <td class="precio-destacado">$60.000 - $150.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Reparación de Botones</td>
+                                    <td>
+                                        <span class="badge badge-modelo">Todos los modelos</span>
+                                    </td>
+                                    <td class="precio-destacado">$50.000 - $120.000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Categoría: Android -->
+                <div class="categoria-header" onclick="toggleCategoria('android')">
+                    <h5>
+                        <span><i class="bi bi-phone me-2"></i>Reparaciones Android</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </h5>
+                </div>
+                <div id="android" class="categoria-contenido">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Servicio</th>
+                                    <th>Marcas</th>
+                                    <th>Precio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Cambio de Pantalla</td>
+                                    <td>
+                                        <span class="badge badge-modelo">Samsung</span>
+                                        <span class="badge badge-modelo">Xiaomi</span>
+                                        <span class="badge badge-modelo">Huawei</span>
+                                    </td>
+                                    <td class="precio-destacado">$70.000 - $300.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Cambio de Batería</td>
+                                    <td>
+                                        <span class="badge badge-modelo">Todas las marcas</span>
+                                    </td>
+                                    <td class="precio-destacado">$50.000 - $120.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Reparación de Cámara</td>
+                                    <td>
+                                        <span class="badge badge-modelo">Samsung</span>
+                                        <span class="badge badge-modelo">Xiaomi</span>
+                                        <span class="badge badge-modelo">Motorola</span>
+                                    </td>
+                                    <td class="precio-destacado">$60.000 - $150.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Cambio de Conector de Carga</td>
+                                    <td>
+                                        <span class="badge badge-modelo">Todas las marcas</span>
+                                    </td>
+                                    <td class="precio-destacado">$40.000 - $90.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Actualización de Software</td>
+                                    <td>
+                                        <span class="badge badge-modelo">Todas las marcas</span>
+                                    </td>
+                                    <td class="precio-destacado">$25.000 - $50.000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Categoría: Visor -->
+                <div class="categoria-header" onclick="toggleCategoria('visor')">
+                    <h5>
+                        <span><i class="bi bi-display me-2"></i>Cambio de Visor/Pantalla</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </h5>
+                </div>
+                <div id="visor" class="categoria-contenido">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Dispositivo</th>
+                                    <th>Tipo de Pantalla</th>
+                                    <th>Precio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Smartphones</td>
+                                    <td class="servicio-descripcion">Pantalla LCD/OLED original o genérica</td>
+                                    <td class="precio-destacado">$70.000 - $450.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Tablets</td>
+                                    <td class="servicio-descripcion">Pantallas de 7 a 12 pulgadas</td>
+                                    <td class="precio-destacado">$120.000 - $600.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Laptops</td>
+                                    <td class="servicio-descripcion">Pantallas de 11 a 17 pulgadas</td>
+                                    <td class="precio-destacado">$150.000 - $800.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Monitores</td>
+                                    <td class="servicio-descripcion">Pantallas de 19 a 32 pulgadas</td>
+                                    <td class="precio-destacado">$200.000 - $900.000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Categoría: Accesorios -->
+                <div class="categoria-header" onclick="toggleCategoria('accesorios')">
+                    <h5>
+                        <span><i class="bi bi-plugin me-2"></i>Venta de Accesorios</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </h5>
+                </div>
+                <div id="accesorios" class="categoria-contenido">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Descripción</th>
+                                    <th>Precio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Cargadores Originales</td>
+                                    <td class="servicio-descripcion">Cargadores oficiales de todas las marcas</td>
+                                    <td class="precio-destacado">$25.000 - $60.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Cables de Datos</td>
+                                    <td class="servicio-descripcion">Cables USB-C, Lightning, Micro USB</td>
+                                    <td class="precio-destacado">$8.000 - $25.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Fundas y Protectores</td>
+                                    <td class="servicio-descripcion">Fundas para todos los modelos de celulares</td>
+                                    <td class="precio-destacado">$15.000 - $50.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Audífonos</td>
+                                    <td class="servicio-descripcion">Audífonos con cable e inalámbricos</td>
+                                    <td class="precio-destacado">$20.000 - $150.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Baterías Externas</td>
+                                    <td class="servicio-descripcion">Power banks de diversas capacidades</td>
+                                    <td class="precio-destacado">$30.000 - $120.000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Nota sobre precios -->
+                <div class="alert alert-info mt-4">
+                    <h6><i class="bi bi-info-circle me-2"></i>Nota importante:</h6>
+                    <p class="mb-0">Los precios mostrados son referenciales y pueden variar según el modelo específico, disponibilidad de repuestos y complejidad de la reparación. Consulta con nuestro personal para un presupuesto exacto.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Resto del contenido existente -->
+        <!-- ... (mantener el resto del código existente) ... -->
+    </main>
+
+    <!-- Bootstrap + Script personalizado -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Función para mostrar/ocultar categorías
+        function toggleCategoria(id) {
+            const elemento = document.getElementById(id);
+            const icono = elemento.previousElementSibling.querySelector('i.bi-chevron-down');
+            
+            if (elemento.classList.contains('mostrar')) {
+                elemento.classList.remove('mostrar');
+                icono.classList.remove('bi-chevron-up');
+                icono.classList.add('bi-chevron-down');
+            } else {
+                elemento.classList.add('mostrar');
+                icono.classList.remove('bi-chevron-down');
+                icono.classList.add('bi-chevron-up');
+            }
+        }
+        
+        // Abrir la primera categoría por defecto
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleCategoria('software');
+            
+            // Agregar funcionalidad al enlace de precios en el menú
+            document.getElementById('preciosLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('preciosSection').scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+        
+        // ... (resto del código JavaScript existente) ...
+    </script>
+
+</body>
+
+</html>

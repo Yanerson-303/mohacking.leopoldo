@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Registro de Reparaciones</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  
+  <!-- Font Awesome para iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+
+  <!-- Librerías externas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --primary-color: #ffffff;
+      --secondary-color: #FF7F00;
+      --secondary-light: #FFA34D;
+      --secondary-dark: #CC6600;
+      --text-color: #333333;
+      --text-light: #666666;
+      --glass-bg: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.8);
+      --glass-shadow: rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      background-color: var(--primary-color);
+      color: var(--text-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 15% 50%, rgba(255, 165, 0, 0.05) 0%, transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(255, 165, 0, 0.05) 0%, transparent 25%);
+    }
+
+    /* Efecto de vidrio líquido (glassmorphism) */
+    .glass-effect {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 32px var(--glass-shadow);
+      border-radius: 12px;
+    }
+
+    /* Sidebar con efecto de vidrio */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100vh;
+      width: 250px;
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-right: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 4px 0 16px rgba(0, 0, 0, 0.05);
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    .sidebar h4 {
+      color: var(--secondary-color);
+      font-weight: 700;
+      text-align: center;
+      padding: 1rem 0;
+      border-bottom: 2px solid var(--secondary-light);
+      margin-bottom: 1.5rem;
+    }
+
+    .nav-link {
+      color: var(--text-color);
+      padding: 0.75rem 1rem;
+      margin: 0.25rem 0;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      background-color: var(--secondary-light);
+      color: white;
+    }
+
+    /* Contenido principal */
+    .main-content {
+      margin-left: 250px;
+      padding: 2rem;
+    }
+
+    @media (max-width: 992px) {
+      .sidebar {
+        width: 80px;
+        padding: 1rem 0.5rem;
+      }
+      .sidebar h4 {
+        font-size: 1rem;
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        margin: 0 auto;
+      }
+      .nav-link span {
+        display: none;
+      }
+      .main-content {
+        margin-left: 80px;
+      }
+    }
+
+    /* Títulos */
+    h2 {
+      color: var(--secondary-color);
+      font-weight: 700;
+      position: relative;
+      padding-bottom: 0.5rem;
+    }
+
+    h2:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      background: var(--secondary-color);
+      border-radius: 2px;
+    }
+
+    /* Formularios */
+    .form-label {
+      font-weight: 600;
+      color: var(--text-light);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      border: 1px solid #ddd;
+      transition: all 0.3s;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--secondary-color);
+      box-shadow: 0 0 0 0.2rem rgba(255, 127, 0, 0.25);
+    }
+
+    /* Botones */
+    .btn {
+      border-radius: 8px;
+      padding: 0.5rem 1.5rem;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background-color: var(--secondary-color);
+      border-color: var(--secondary-color);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--secondary-dark);
+      border-color: var(--secondary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-warning {
+      background-color: #ffc107;
+      border-color: #ffc107;
+    }
+
+    .btn-danger {
+      background-color: #dc3545;
+      border-color: #dc3545;
+    }
+
+    .btn-outline-success {
+      color: var(--secondary-color);
+      border-color: var(--secondary-color);
+    }
+
+    .btn-outline-success:hover {
+      background-color: var(--secondary-color);
+      color: white;
+    }
+
+    .btn-group .btn {
+      border-radius: 6px;
+      margin: 0 0.25rem 0.25rem 0;
+    }
+
+    /* Tablas */
+    .table {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .table thead th {
+      background-color: var(--secondary-color);
+      color: white;
+      border: none;
+      padding: 1rem;
+      font-weight: 600;
+    }
+
+    .table tbody td {
+      padding: 1rem;
+      vertical-align: middle;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+      background-color: rgba(255, 163, 77, 0.1);
+    }
+
+    .table-hover tbody tr:hover {
+      background-color: rgba(255, 163, 77, 0.2);
+    }
+
+    /* Tarjetas con efecto de vidrio */
+    .card {
+      border: none;
+      border-radius: 12px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px var(--glass-shadow);
+      transition: transform 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card-header {
+      background-color: var(--secondary-color);
+      color: white;
+      border: none;
+      font-weight: 600;
+    }
+
+    /* Modal */
+    .modal-content {
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+    }
+
+    .modal-header {
+      background-color: var(--secondary-color);
+      color: white;
+    }
+
+    /* Animaciones suaves */
+    .fade-in {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mejoras visuales para elementos específicos */
+    #graficoReparaciones {
+      border-radius: 12px;
+      background: white;
+      padding: 1rem;
+    }
+
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .stat-card {
+      background: rgba(255, 163, 77, 0.1);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .stat-icon {
+      font-size: 1.5rem;
+      color: var(--secondary-color);
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--secondary-color);
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 0.875rem;
+      color: var(--text-light);
+    }
+
+    /* Patrón gráfico */
+    .patron-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      max-width: 200px;
+    }
+
+    .patron-btn {
+      aspect-ratio: 1;
+      border: 2px solid var(--secondary-color);
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .patron-btn:hover, .patron-btn.selected {
+      background-color: var(--secondary-color);
+      color: white;
+    }
+  </style>
+</head>
+
+<body class="fade-in">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h4><i class="fas fa-mobile-alt me-2"></i> Fixbionic</h4>
+
+    <div class="sidebar-nav">
+      <a class="nav-link" href="../../index.html">
+        <i class="fas fa-home me-2"></i><span>Inicio</span>
+      </a>
+      <a class="nav-link" href="estadisticas.html">
+        <i class="fas fa-keyboard me-2"></i><span>Accesorios</span>
+      </a>
+      <a class="nav-link" href="estadisticas.html">
+        <i class="fas fa-chart-bar me-2"></i><span>Estadísticas</span>
+      </a>
+      <a class="nav-link active" href="reparacion.html">
+        <i class="fas fa-tools me-2"></i><span>Reparaciones</span>
+      </a>
+
+      <!-- Botón para abrir el modal -->
+      <button type="button" class="btn btn-primary mt-3 w-100" data-bs-toggle="modal" data-bs-target="#modal-info">
+        <i class="fas fa-info-circle me-2"></i> <span>Ver funciones del sistema</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal de información -->
+  <div class="modal fade" id="modal-info" tabindex="-1" aria-labelledby="modalInfoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        
+        <!-- Header -->
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalInfoLabel">
+            <i class="fas fa-keyboard me-2"></i> Funciones del sistema
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        
+        <!-- Body -->
+        <div class="modal-body">
+          <p>Para activar funciones rápidamente puedes usar las siguientes combinaciones de teclas:</p>
+          <ul class="list-group">
+            <li class="list-group-item"><strong>ESPACIO + 1:</strong> Agregar</li>
+            <li class="list-group-item"><strong>ESPACIO + 2:</strong> Editar</li>
+            <li class="list-group-item"><strong>ESPACIO + 3:</strong> Eliminar</li>
+            <li class="list-group-item"><strong>ESPACIO + 4:</strong> Exportar a Excel</li>
+            <li class="list-group-item"><strong>ESPACIO + 5:</strong> Exportar a JSON</li>
+            <li class="list-group-item"><strong>ESPACIO + 6:</strong> Descargar imagen</li>
+            <li class="list-group-item"><strong>ESPACIO + 7:</strong> Imprimir</li>
+          </ul>
+          <hr>
+          <p><strong>Nota:</strong> Siempre debes presionar primero la tecla <kbd>ESPACIO</kbd> y luego el número deseado.</p>
+        </div>
+        
+        <!-- Footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón para móviles -->
+  <button class="sidebar-toggle d-lg-none btn btn-primary">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <h2 class="mb-4"><i class="fas fa-tools me-2"></i>Registro de Reparaciones</h2>
+    
+    <div class="row g-4">
+      <!-- Formulario -->
+      <div class="col-lg-8">
+        <form id="formulario" autocomplete="off" class="glass-effect p-4">
+          <div class="row g-3">
+            <!-- Campos del formulario -->
+            <div class="col-md-6">
+              <label for="fecha" class="form-label">Fecha</label>
+              <input type="date" id="fecha" class="form-control" required>
+            </div>
+            
+            <div class="col-md-6">
+              <label for="cliente" class="form-label">Cliente</label>
+              <input type="text" id="cliente" class="form-control" placeholder="Nombre del cliente" required>
+            </div>
+            
+            <div class="col-md-6">
+              <label for="telefono" class="form-label">Teléfono</label>
+              <input type="text" id="telefono" class="form-control" placeholder="Número de contacto" required>
+            </div>
+            
+            <div class="col-md-6">
+              <label for="modelo" class="form-label">Modelo</label>
+              <input type="text" id="modelo" class="form-control" placeholder="Modelo del dispositivo" required>
+            </div>
+            
+            <div class="col-md-6">
+              <label for="reparacion" class="form-label">Tipo de reparación</label>
+              <select id="reparacion" class="form-select" required>
+                <option value="" selected disabled>Seleccione el tipo de reparación</option>
+                <option value="pantalla">Cambio de pantalla</option>
+                <option value="bateria">Reemplazo de batería</option>
+                <option value="conector">Reparación de conector de carga</option>
+                <option value="camara">Reparación de cámara</option>
+                <option value="software">Problemas de software</option>
+                <option value="audio">Problemas de audio/altavoz</option>
+                <option value="microfono">Reparación de micrófono</option>
+                <option value="botones">Reparación de botones</option>
+                <option value="agua">Daño por agua</option>
+                <option value="general">Reparación general/revisión</option>
+                <option value="otros">Otro</option>
+              </select>
+              
+              <!-- Campo de texto que aparece solo cuando se selecciona "Otros" -->
+              <div id="otraReparacionContainer" class="mt-2" style="display: none;">
+                <label for="otraReparacion" class="form-label">Especifique el tipo de reparación</label>
+                <input type="text" id="otraReparacion" class="form-control" placeholder="Describa el tipo de reparación">
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <label for="tecnico" class="form-label">Técnico</label>
+              <select id="tecnico" class="form-select" required>
+                <option value="">Selecciona Técnico</option>
+                <option value="Santiago">Santiago</option>
+                <option value="Jonathan">Jonathan</option>
+                <option value="Ivan">Ivan</option>
+                <option value="Diego">Deivid</option>
+                <option value="Alex">Alex</option>
+                <option value="Harold">Harold</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label for="notas" class="form-label">Notas</label>
+              <textarea id="notas" class="form-control" placeholder="Notas adicionales" rows="2"></textarea>
+            </div>
+            
+            <div class="col-md-4">
+              <label for="precio" class="form-label">Precio ($)</label>
+              <input type="number" id="precio" class="form-control" placeholder="0.00" min="0" step="0.01" required>
+            </div>
+            
+            <div class="col-md-4">
+              <label for="estado" class="form-label">Estado</label>
+              <select id="estado" class="form-select" required>
+                <option value="nulo">No iniciado</option>
+                <option value="pendiente">En proceso</option>
+                <option value="entregado">Entregado</option>
+              </select>
+            </div>
+            
+            <div class="col-md-4">
+              <label for="controlID" class="form-label">ID</label>
+              <input type="text" id="controlID" class="form-control" placeholder="Generado automáticamente" readonly>
+            </div>
+
+            <div class="col-md-6">
+              <label for="tipo-contrasena" class="form-label">Tipo de Contraseña</label>
+              <select id="tipo-contrasena" class="form-select" required>
+                <option value="">Selecciona tipo</option>
+                <option value="pin">PIN / Palabra</option>
+                <option value="patron">Patrón Gráfico</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label for="contrasena" class="form-label">Contraseña</label>
+              <input type="text" id="contrasena" class="form-control" placeholder="PIN o palabra" style="display: none;">
+            </div>
+
+            <div class="col-12" id="patron-container" style="display: none;">
+              <label class="form-label">Patrón Gráfico</label>
+              <div class="patron-grid">
+                <!-- Patrón gráfico -->
+                <button type="button" class="patron-btn" data-num="1">1</button>
+                <button type="button" class="patron-btn" data-num="2">2</button>
+                <button type="button" class="patron-btn" data-num="3">3</button>
+                <button type="button" class="patron-btn" data-num="4">4</button>
+                <button type="button" class="patron-btn" data-num="5">5</button>
+                <button type="button" class="patron-btn" data-num="6">6</button>
+                <button type="button" class="patron-btn" data-num="7">7</button>
+                <button type="button" class="patron-btn" data-num="8">8</button>
+                <button type="button" class="patron-btn" data-num="9">9</button>
+              </div>
+              <small class="text-muted d-block mt-2">Selecciona los puntos en orden para establecer el patrón</small>
+              <input type="hidden" id="patron-input" />
+              <p class="text-danger mt-2 d-none" id="errorPatron">Debe ingresar un patrón válido (mínimo 4 puntos).</p>
+            </div>
+          </div>
+
+          <!-- Botones principales -->
+          <div class="btn-group-wrap mt-4">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-plus me-2"></i>Agregar
+            </button>
+            <button type="button" id="btn-editar" class="btn btn-warning">
+              <i class="fas fa-edit me-2"></i>Editar
+            </button>
+            <button type="button" id="btn-eliminar" class="btn btn-danger">
+              <i class="fas fa-trash me-2"></i>Eliminar
+            </button>
+          </div>
+          
+          <!-- Botones secundarios -->
+          <div class="btn-group-wrap mt-3">
+            <button type="button" id="btn-export-excel" class="btn btn-success">
+              <i class="fas fa-file-excel me-2"></i>Excel
+            </button>
+            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-exportar-json">
+              <i class="fas fa-file-code me-2"></i>JSON
+            </button>
+            <button type="button" id="btn-descargar-imagen" class="btn btn-dark">
+              <i class="fas fa-image me-2"></i>Imagen
+            </button>
+            <button type="button" id="btn-imprimir" class="btn btn-info">
+              <i class="fas fa-print me-2"></i>Imprimir
+            </button>
+          </div>
+          
+          <!-- Buscador e importación -->
+          <div class="row mt-3 g-2">
+            <div class="col-md-8">
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" placeholder="Buscar reparaciones..." id="buscarInput" class="form-control">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <input type="file" id="importarBD" class="form-control d-none">
+              <label for="importarBD" class="btn btn-outline-primary w-100">
+                <i class="fas fa-file-import me-2"></i>Importar
+              </label>
+            </div>
+          </div>
+        </form>
+
+        <!-- Tabla de reparaciones -->
+        <div class="glass-effect p-3 mt-4">
+          <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle">
+              <thead>
+                <tr>
+                  <th><i class="fas fa-calendar me-1"></i>Fecha</th>
+                  <th><i class="fas fa-clock me-1"></i>Hora</th>
+                  <th><i class="fas fa-user me-1"></i>Cliente</th>
+                  <th><i class="fas fa-phone me-1"></i>Teléfono</th>
+                  <th><i class="fas fa-mobile me-1"></i>Modelo</th>
+                  <th><i class="fas fa-tools me-1"></i>Reparación</th>
+                  <th><i class="fas fa-user-cog me-1"></i>Técnico</th>
+                  <th><i class="fas fa-sticky-note me-1"></i>Notas</th>
+                  <th><i class="fas fa-dollar-sign me-1"></i>Precio</th>
+                  <th><i class="fas fa-key me-1"></i>Contraseña</th>
+                  <th><i class="fas fa-cog me-1"></i>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-reparaciones"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel derecho -->
+      <div class="col-lg-4">
+        <div class="glass-effect p-4 h-100">
+          <h5 class="fw-bold mb-4" style="color: var(--secondary-color);"><i class="fas fa-chart-pie me-2"></i>Resumen de Reparaciones</h5>
+          <div class="chart-container">
+            <canvas id="graficoReparaciones"></canvas>
+          </div>
+          <div class="stats-container mt-4">
+            <div class="stat-card">
+              <i class="fas fa-tasks stat-icon"></i>
+              <div>
+                <span class="stat-label">Total</span>
+                <span class="stat-value" id="total-reparaciones">0</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-clock stat-icon"></i>
+              <div>
+                <span class="stat-label">Pendientes</span>
+                <span class="stat-value" id="total-pendientes">0</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <i class="fas fa-check-circle stat-icon"></i>
+              <div>
+                <span class="stat-label">Entregadas</span>
+                <span class="stat-value" id="total-entregadas">0</span>
+              </div>
+            </div>
+          </div>
+          <div id="contenedor-exportacion" class="mt-4"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Exportar JSON -->
+  <div class="modal fade" id="modal-exportar-json" tabindex="-1" aria-labelledby="modalExportarJsonLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalExportarJsonLabel"><i class="fas fa-file-export me-2"></i>Exportar Base de Datos</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body text-center py-4">
+          <i class="fas fa-database fa-3x mb-3" style="color: var(--secondary-color);"></i>
+          <p>¿Qué deseas hacer con la base de datos actual?</p>
+        </div>
+        <div class="modal-footer justify-content-center border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Cancelar
+          </button>
+          <button type="button" id="btn-guardar-json" class="btn btn-success">
+            <i class="fas fa-save me-2"></i>Guardar JSON
+          </button>
+          <button type="button" id="btn-agregar-backup" class="btn btn-primary">
+            <i class="fas fa-copy me-2"></i>Agregar copia
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../json/reparacion.js"></script>
+
+</body>
+</html>
