@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const configJSON = {
     usuario: "admin",
-    contraseña: "admin"
+    contraseña: "tecnicos"
   };
 
   // =================== LOGIN ===================

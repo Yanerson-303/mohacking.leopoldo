@@ -747,17 +747,10 @@ function exportarSeleccionadaComoImagen(tipo = null) {
 <body onload="window.print(); window.close();">
   <div class="factura">
     <div class="center">
-      <img src="../../data/img/a1.png" alt="Logo Fixbionic" class="logo" />
     </div>
 
     <div class="center">
-      <strong>Fix_Bionic</strong><br />
-      NIT: 1022421675-9<br />
-      ESTABLECIMIENTO: FIX_Bionic<br />
-      Cra 50 No. 51 - 29<br />
-      CC Arquicentro<br />
-      Itagüí, Antioquia, Colombia<br />
-      Tel: (+57) 301 5920400<br />
+      <strong>
       Registrado en el Régimen Simple de Tributación<br />
       No Responsable de IVA<br />
       Actividad Económica: 9511 - Mantenimiento y reparación de aparatos electrónicos de consumo
@@ -808,8 +801,8 @@ function exportarSeleccionadaComoImagen(tipo = null) {
     <div class="linea"></div>
     <div class="center">**** Gracias por su compra ****</div>
     <div class="center">
-      Impresa por Factura Ya - Software de Facturación<br />
-      NIT: 901361537-1 - Proveedor Tecnológico Factura Ya
+      Impresa por Mohacking - Software de Facturación<br />
+      Proveedor Tecnológico Mohacking
     </div>
   </div>
 </body>
